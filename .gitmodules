@@ -136,3 +136,9 @@
 [submodule "dxvk-igdext"]
 	path = dxvk-igdext
 	url = https://github.com/GameTechDev/dxvk-igdext
+[submodule "spout2pw"]
+	path = spout2pw
+	url = https://github.com/tasokait/spout2pw.git
+[submodule "libdrm"]
+	path = libdrm
+	url = https://gitlab.freedesktop.org/mesa/libdrm.git
