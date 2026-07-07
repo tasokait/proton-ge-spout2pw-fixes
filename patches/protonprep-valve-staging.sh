@@ -294,9 +294,6 @@ apply_all_in_dir() {
     apply_patch "../patches/wine-hotfixes/pending/0001-server-Dynamically-relocate-.exes-by-default-too.patch"
     apply_patch "../patches/wine-hotfixes/pending/0002-ntdll-allow-disabling-executable-ASLR.patch"
 
-    echo "WINE: -CUSTOM- Fix thread stops inside __wine_syscall_dispatcher"
-    apply_patch "../patches/wine-hotfixes/pending/Fix_thread_stops_inside__wine_syscall_dispatcher.patch"
-
     echo "WINE: -CUSTOM- added d3dkmt dma buf fd request to wineserver"
     apply_patch "../patches/wine-hotfixes/pending/d3dkmt_fd_wineserver_export.patch"
 
