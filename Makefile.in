@@ -27,7 +27,7 @@ SHELL := /bin/bash
 TARGET_ARCH ?= x86_64
 
 ifeq ($(TARGET_ARCH),x86_64)
-	STEAMRT_IMAGE ?= registry.gitlab.steamos.cloud/proton/steamrt4/sdk/x86_64:4.0.20260331.220802-0
+	STEAMRT_IMAGE ?= registry.gitlab.steamos.cloud/proton/steamrt4/sdk/x86_64:4.0.20260331.220802-2
 else ifeq ($(TARGET_ARCH),arm64)
 	STEAMRT_IMAGE ?= registry.gitlab.steamos.cloud/proton/steamrt4/sdk/arm64-llvm:4.0.20260331.220802-3
 else
@@ -970,6 +970,83 @@ include $(SRC)/vklayers/build-low_latency_layer.mk
 include $(SRC)/vklayers/build-vkbasalt.mk
 endif # WITHOUT_VKLAYERS
 
+##
+## libdrm
+##
+LIBDRM_MESON_ARGS = \
+    --buildtype=release \
+    -Dudev=true \
+    -Dvalgrind=disabled \
+    -Dman-pages=disabled \
+    -Dtests=false \
+    -Dinstall-test-programs=false
+
+$(eval $(call rules-source,libdrm,$(SRCDIR)/libdrm))
+$(eval $(call rules-meson,libdrm,x86_64,unix))
+
+##
+## pipewirestatic
+##
+
+PIPEWIRESTATIC_DEPENDS = libdrm
+PIPEWIRESTATIC_SRC = $(SRCDIR)/spout2pw/subprojects/pipewire-static
+PIPEWIRESTATIC_MESON_ARGS = -Dexamples=disabled \
+        -Dtests=disabled \
+        -Dgstreamer=disabled \
+        -Dlibsystemd=disabled \
+        -Dlogind=disabled \
+        -Dselinux=disabled \
+        -Dpipewire-alsa=disabled \
+        -Dpipewire-jack=disabled \
+        -Dpipewire-v4l2=disabled \
+        -Dspa-plugins=enabled \
+        -Dudev=disabled \
+        -Dsdl2=disabled \
+        -Dv4l2=disabled \
+        -Dalsa=disabled \
+        -Dx11=disabled \
+        -Dlibffado=disabled \
+        -Dsnap=disabled \
+        -Dopus=disabled \
+        -Dreadline=disabled \
+        -Dgsettings=disabled \
+        -Dsession-managers='[]' \
+        -Ddefault_library=static \
+        -Djack=disabled \
+        -Davahi=disabled \
+        -Dpipewire-alsa=disabled \
+        -Draop=disabled -Davb=disabled \
+        -Dlibpulse=disabled \
+        -Dflatpak=disabled \
+        -Dsupport=enabled \
+        -Dstatic=true
+        
+$(eval $(call rules-source,pipewirestatic,$(SRCDIR)/spout2pw/subprojects/pipewire-static))
+$(eval $(call rules-meson,pipewirestatic,x86_64,unix))
+
+$(OBJ)/.pipewirestatic-x86_64-post-build:
+	echo '[built-in options]' > $(PIPEWIRESTATIC_x86_64_DST)/native.txt
+	echo "pkg_config_path='$(LIBDRM_x86_64_DST)/lib/x86_64-linux-gnu/pkgconfig:$(PIPEWIRESTATIC_x86_64_DST)/lib/x86_64-linux-gnu/pkgconfig'" >> $(PIPEWIRESTATIC_x86_64_DST)/native.txt
+	echo "c_args = ['-I$(LIBDRM_x86_64_DST)/include', '-I$(LIBDRM_x86_64_DST)/include/libdrm', '-I$(PIPEWIRESTATIC_x86_64_DST)/include']" >> $(PIPEWIRESTATIC_x86_64_DST)/native.txt
+
+##
+## spout2pw
+##
+
+SPOUT2PW_DEPENDS = wine vulkan-headers pipewirestatic libdrm
+SPOUT2PW_HOST_DEPENDS = wine vulkan-headers pipewirestatic libdrm
+SPOUT2PW_MESON_ARGS += --cross-file=$(SRCDIR)/spout2pw/misc/x86_64-w64-mingw32.txt \
+	-Dlibpipewire_static_lib=$(PIPEWIRESTATIC_x86_64_DST)/lib/x86_64-linux-gnu/libpipewire-static-0.3.a \
+	--native-file=$(PIPEWIRESTATIC_x86_64_DST)/native.txt
+
+$(eval $(call rules-source,spout2pw,$(SRCDIR)/spout2pw))
+$(eval $(call rules-meson,spout2pw,x86_64,unix))
+
+$(OBJ)/.spout2pw-x86_64-post-build:
+	mkdir $(SPOUT2PW_x86_64_OBJ)/spout2pw
+	cp -a $(SPOUT2PW_x86_64_OBJ)/pkg/. $(SPOUT2PW_x86_64_OBJ)/spout2pw
+	mkdir -p $(DST_DIR)/share
+	cp -a $(SPOUT2PW_x86_64_OBJ)/spout2pw $(DST_DIR)/share/
 
 ##
 ## FEX

@@ -1,0 +1,127 @@
+--- a/server/d3dkmt.c
++++ b/server/d3dkmt.c
+@@ -23,6 +23,10 @@
+ #include <assert.h>
+ #include <stdbool.h>
+ #include <stdio.h>
++#include <sys/socket.h>
++#include <sys/un.h>
++#include <errno.h>
++#include <unistd.h>
+ 
+ #include "ntstatus.h"
+ #define WIN32_NO_STATUS
+@@ -34,7 +38,6 @@
+ #include "handle.h"
+ #include "request.h"
+ #include "security.h"
+-
+ struct d3dkmt_object
+ {
+     struct object       obj;            /* object header */
+@@ -585,6 +588,16 @@
+     return (struct d3dkmt_object *)ret;
+ }
+ 
++static struct d3dkmt_object *get_d3dkmt_object_any( d3dkmt_handle_t global )
++{
++    unsigned int index = handle_to_index( global );
++    struct d3dkmt_object *object;
++    if (objects + index >= objects_end) object = NULL;
++    else object = objects[index];
++    if (!object || object->global != global) return NULL;
++    return object;
++}
++
+ /* create a global d3dkmt object */
+ DECL_HANDLER(d3dkmt_object_create)
+ {
+@@ -792,3 +805,75 @@
+ 
+     release_object( mutex );
+ }
++
++DECL_HANDLER(D3DKMT_EXTRACT_FD){
++    const char *SOCKET_PATH = get_req_data();
++    int unix_fd = -1;
++    int client_fd;
++    struct sockaddr_un addr;
++    struct d3dkmt_object *object = get_d3dkmt_object_any(req->handle);
++    struct fd *objectfdstruct = d3dkmt_object_get_fd((struct object*)object);
++    struct msghdr msg = {0};
++    struct iovec iov[1];
++    char ctrl_buf[CMSG_SPACE(sizeof(int))];
++    char data[1] = {'*'};
++    struct cmsghdr *cmsg;
++    size_t max_copy, copy_len;
++    fprintf( stderr, "trying to extract fd\n");
++    if(!object){
++        set_error(STATUS_INVALID_HANDLE);
++        return;
++    }
++    if(!objectfdstruct){
++        return;
++    }
++    unix_fd = get_unix_fd(objectfdstruct);
++    fprintf( stderr, "got the fd\n");
++    iov[0].iov_base = data;
++    iov[0].iov_len = sizeof(data);
++    msg.msg_iov = iov;
++    msg.msg_iovlen = 1;
++    msg.msg_control = ctrl_buf;
++    msg.msg_controllen = CMSG_SPACE(sizeof(int));
++
++    cmsg = CMSG_FIRSTHDR(&msg);
++    cmsg->cmsg_level = SOL_SOCKET;
++    cmsg->cmsg_type = SCM_RIGHTS;
++    cmsg->cmsg_len = CMSG_LEN(sizeof(int));
++    *((int *) CMSG_DATA(cmsg)) = unix_fd;
++    fprintf( stderr, "openning socket\n");
++    client_fd = socket(AF_UNIX, SOCK_STREAM, 0);
++    if (client_fd == -1){
++        set_error(STATUS_PORT_CONNECTION_REFUSED);
++        return;
++    }
++    fprintf( stderr, "socket openned, preparing message\n");
++    memset(&addr, 0, sizeof(struct sockaddr_un));
++    fprintf( stderr, "zeroed socket address struct\n");
++    addr.sun_family = AF_UNIX;
++    max_copy = sizeof(addr.sun_path) - 1;
++    copy_len = (req->path_size < max_copy) ? req->path_size : max_copy;
++    fprintf( stderr, "coppying socket path for message\n");
++    memcpy(addr.sun_path,SOCKET_PATH,copy_len);
++    addr.sun_path[copy_len] = '\0';
++
++    fprintf( stderr,"Waiting for connection to socket server...\n");
++    while (connect(client_fd, (struct sockaddr *)&addr, sizeof(struct sockaddr_un)) == -1) {
++        if (errno != ENOENT && errno != ECONNREFUSED) {
++            perror("Fatal connect error\n");
++            close(client_fd);
++            set_error(STATUS_PORT_CONNECTION_REFUSED);
++            return;
++        }
++    }
++    fprintf( stderr,"Connected to the socket server, Sending FD %d...\n", unix_fd);
++
++    if (sendmsg(client_fd, &msg, 0) < 0) {
++        fprintf( stderr,"sendmsg failed\n");
++        close(client_fd);
++        set_error(STATUS_PORT_CONNECTION_REFUSED);
++        return;
++    }
++    fprintf( stderr,"fd sent successfully.\n");
++    close(client_fd);
++}
+--- a/server/protocol.def
++++ b/server/protocol.def
+@@ -4352,3 +4364,10 @@
+     unsigned int shm_idx;
+ @REPLY
+ @END
++
++@REQ(D3DKMT_EXTRACT_FD)
++    d3dkmt_handle_t handle;
++    data_size_t path_size;
++    VARARG(socket_path,string);
++@REPLY
++@END
