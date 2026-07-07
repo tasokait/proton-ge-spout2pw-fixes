@@ -25,7 +25,7 @@ PROTONSDK_VERSION = $(STEAMRT_VERSION)-0-dev
 # this is just for building toolchain, as we do static builds it should
 # not have any impact on the end result, but changing it will invalidate
 # docker caches, so we need something that don't change much
-BASE_IMAGE := $(STEAMRT_URLBASE)/steamrt/steamrt4/sdk$(STEAMRT_INFIX):4.0.20260119.200228
+BASE_IMAGE := $(STEAMRT_URLBASE)/steamrt/steamrt4/sdk$(STEAMRT_INFIX):4.0.20260331.220802
 
 MINGW_VERSION = 13.0.0
 RUST_VERSION = 1.68.0

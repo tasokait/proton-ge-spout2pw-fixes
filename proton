@@ -18,6 +18,7 @@ import shlex
 import uuid
 import json
 import time
+import filecmp
 
 from ctypes import CDLL
 from ctypes import CFUNCTYPE
@@ -196,7 +197,7 @@ def file_is_wine_builtin_dll(path):
                     '/lib/wine/i386-unix',
                     '/lib/wine/i386-windows',
                     '/lib/wine/x86_64-unix',
-                    '/lib/wine/x86_64-windows',
+                    '/lib/wine/x86_64-windows',#!/usr/bin/env python3
                     '/lib/wine/aarch64-unix',
                     '/lib/wine/aarch64-windows',
                     # old paths
@@ -1940,6 +1941,7 @@ class Session:
         self.check_environment("PROTON_DLSS_INDICATOR", "dlsshud")
         self.check_environment("PROTON_XESS_UPGRADE", "xess")
         self.check_environment("PROTON_USE_OPTISCALER", "optiscaler")
+        self.check_environment("PROTON_USE_SPOUT2PW","spout2pw")
 
         self.check_environment("PROTON_NATIVE_AGS", "nativeags")
         self.check_environment("PROTON_ENABLE_HDR", "hdr")
@@ -2170,6 +2172,24 @@ class Session:
         self.env.setdefault("WINE_MONO_HIDETYPES", "0")
 
         # Proton-EM custom options:
+
+        if "spout2pw" in self.compat_config:
+            spoutdlls = g_proton.dist_dir + "share/spout2pw/spout2pw-dlls"
+            append_to_env_str(self.env,"WINEDLLPATH",spoutdlls,":")
+            spoutwinshare = [spoutdlls + "/x86_64-windows/spout2pw.exe",spoutdlls + "/x86_64-windows/spoutdxtoc.dll"]
+            spoutwindist = [g_compatdata.prefix_dir + "drive_c/windows/system32/spout2pw.exe",g_compatdata.prefix_dir + "drive_c/windows/system32/spoutdxtoc.dll"]
+            wininfile = subprocess.run([g_proton.wine_bin, "winepath", "-w", g_proton.dist_dir + "share/spout2pw/spout2pw.inf"], capture_output=True, text=True, check=True)
+            wininfile = wininfile.stdout.strip()
+
+            #sanity check
+            if os.path.isfile(spoutwindist[0]) or os.path.isfile(spoutwindist[1]):
+                if (not filecmp.cmp(spoutwindist[0],spoutwinshare[0],shallow=False)) or (not filecmp.cmp(spoutwindist[1],spoutwinshare[1],shallow=False)):
+                    filepaths = [Path(spoutwindist[0]),Path(spoutwindist[1])]
+                    filepaths[0].unlink
+                    filepaths[1].unlink
+                    self.run_proc([g_proton.wine_bin, "cmd", "/c", "rundll32 setupapi.dll,InstallHinfSection DefaultInstall 128 "+wininfile])
+            else:
+                self.run_proc([g_proton.wine_bin, "cmd", "/c", "rundll32 setupapi.dll,InstallHinfSection DefaultInstall 128 "+wininfile])
 
         # Don't use wayland backend when WAYLAND_DISPLAY is not set
         if "wayland" in self.compat_config and "WAYLAND_DISPLAY" in self.env:
