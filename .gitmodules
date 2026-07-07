@@ -94,3 +94,9 @@
 [submodule "bzip2"]
 	path = bzip2
 	url = https://sourceware.org/git/bzip2.git
+[submodule "spout2pw"]
+	path = spout2pw
+	url = https://github.com/tasokait/spout2pw.git
+[submodule "libdrm"]
+	path = libdrm
+	url = https://gitlab.freedesktop.org/mesa/libdrm.git
