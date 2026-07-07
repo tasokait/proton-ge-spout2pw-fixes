@@ -197,7 +197,7 @@ def file_is_wine_builtin_dll(path):
                     '/lib/wine/i386-unix',
                     '/lib/wine/i386-windows',
                     '/lib/wine/x86_64-unix',
-                    '/lib/wine/x86_64-windows',#!/usr/bin/env python3
+                    '/lib/wine/x86_64-windows',
                     '/lib/wine/aarch64-unix',
                     '/lib/wine/aarch64-windows',
                     # old paths
