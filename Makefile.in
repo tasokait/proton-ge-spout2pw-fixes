@@ -1043,11 +1043,15 @@ SPOUT2PW_MESON_ARGS += --cross-file=$(SRCDIR)/spout2pw/misc/x86_64-w64-mingw32.t
 $(eval $(call rules-source,spout2pw,$(SRCDIR)/spout2pw))
 $(eval $(call rules-meson,spout2pw,x86_64,unix))
 
+$(OBJ)/.spout2pw-post-source: $(OBJ)/.wine-x86_64-build
+	cp -f $(WINE_SRC)/include/wine/server_protocol.h $(SPOUT2PW_SRC)/wine/server_protocol.h
+	touch $@
+
 $(OBJ)/.spout2pw-x86_64-post-build:
-	mkdir $(SPOUT2PW_x86_64_OBJ)/spout2pw
-	cp -a $(SPOUT2PW_x86_64_OBJ)/pkg/. $(SPOUT2PW_x86_64_OBJ)/spout2pw
 	mkdir -p $(DST_DIR)/share
-	cp -a $(SPOUT2PW_x86_64_OBJ)/spout2pw $(DST_DIR)/share/
+	mkdir -p $(DST_DIR)/share/spout2pw
+	cp -a $(SPOUT2PW_x86_64_OBJ)/pkg/. $(DST_DIR)/share/spout2pw
+	rm $(DST_DIR)/share/spout2pw/spout2pw.sh
 
 ##
 ## FEX
