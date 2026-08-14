@@ -1037,6 +1037,7 @@ SPOUT2PW_DEPENDS = wine vulkan-headers pipewirestatic libdrm
 SPOUT2PW_HOST_DEPENDS = wine vulkan-headers pipewirestatic libdrm
 SPOUT2PW_MESON_ARGS += --cross-file=$(SRCDIR)/spout2pw/misc/x86_64-w64-mingw32.txt \
 	-Dlibpipewire_static_lib=$(PIPEWIRESTATIC_x86_64_DST)/lib/x86_64-linux-gnu/libpipewire-static-0.3.a \
+	-Dlibpipewire_static=true \
 	--native-file=$(PIPEWIRESTATIC_x86_64_DST)/native.txt
 
 $(eval $(call rules-source,spout2pw,$(SRCDIR)/spout2pw))
