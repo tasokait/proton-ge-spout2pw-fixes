@@ -294,6 +294,9 @@ apply_all_in_dir() {
     apply_patch "../patches/wine-hotfixes/pending/0001-server-Dynamically-relocate-.exes-by-default-too.patch"
     apply_patch "../patches/wine-hotfixes/pending/0002-ntdll-allow-disabling-executable-ASLR.patch"
 
+    echo "WINE: -CUSTOM- applying lina's memory leak patch"
+    apply_patch "../patches/wine-hotfixes/pending/lina-fix-v5-proton.patch"
+
 ### END WINE PENDING UPSTREAM SECTION ###
 
 
