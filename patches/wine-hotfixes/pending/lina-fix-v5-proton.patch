@@ -229,18 +229,18 @@ index 110404c274c..94d5be98b03 100644
  C_ASSERT( offsetof( struct syscall_frame, xstate ) == 0x2c0 );
  C_ASSERT( sizeof( struct syscall_frame ) == 0x300);
 @@ -518,6 +519,8 @@ struct amd64_thread_data
-     void                **instrumentation_callback; /* 0330 */
      DWORD                 fs;            /* 0338 WOW TEB selector */
      DWORD                 mxcsr;         /* 033c Unix-side mxcsr register */
+     char                  syscall_dispatch; /* 0340 */
 +    volatile char         sigusr1_blocked;  /* 0341 */
 +    volatile char         sigusr1_pending;  /* 0342 */
  };
  
  C_ASSERT( sizeof(struct amd64_thread_data) <= sizeof(((struct ntdll_thread_data *)0)->cpu_data) );
 @@ -526,6 +529,8 @@ C_ASSERT( offsetof( TEB, GdiTebBatch ) + offsetof( struct amd64_thread_data, fra
- C_ASSERT( offsetof( TEB, GdiTebBatch ) + offsetof( struct amd64_thread_data, instrumentation_callback ) == 0x330 );
  C_ASSERT( offsetof( TEB, GdiTebBatch ) + offsetof( struct amd64_thread_data, fs ) == 0x338 );
  C_ASSERT( offsetof( TEB, GdiTebBatch ) + offsetof( struct amd64_thread_data, mxcsr ) == 0x33c );
+ C_ASSERT( offsetof( TEB, GdiTebBatch ) + offsetof( struct amd64_thread_data, syscall_dispatch ) == 0x340 );
 +C_ASSERT( offsetof( TEB, GdiTebBatch ) + offsetof( struct amd64_thread_data, sigusr1_blocked ) == 0x341 );
 +C_ASSERT( offsetof( TEB, GdiTebBatch ) + offsetof( struct amd64_thread_data, sigusr1_pending ) == 0x342 );
  
