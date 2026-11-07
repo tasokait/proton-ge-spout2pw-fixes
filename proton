@@ -2690,8 +2690,8 @@ class Session:
         if "spout2pw" in self.compat_config:
             spoutdlls = g_proton.dist_dir + "share/spout2pw/spout2pw-dlls"
             append_to_env_str(self.env,"WINEDLLPATH",spoutdlls,":")
-            spoutwinshare = [spoutdlls + "/x86_64-windows/spout2pw.exe",spoutdlls + "/x86_64-windows/spoutdxtoc.dll"]
-            spoutwindist = [g_compatdata.prefix_dir + "drive_c/windows/system32/spout2pw.exe",g_compatdata.prefix_dir + "drive_c/windows/system32/spoutdxtoc.dll"]
+            spoutwinshare = [spoutdlls + "/x86_64-windows/spout2pw.exe",spoutdlls + "/x86_64-windows/spout2pw.dll"]
+            spoutwindist = [g_compatdata.prefix_dir + "drive_c/windows/system32/spout2pw.exe",g_compatdata.prefix_dir + "drive_c/windows/system32/spout2pw.dll"]
             wininfile = subprocess.run([g_proton.wine_bin, "winepath", "-w", g_proton.dist_dir + "share/spout2pw/spout2pw.inf"], capture_output=True, text=True, check=True)
             wininfile = wininfile.stdout.strip()
 
