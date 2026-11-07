@@ -532,9 +532,6 @@ apply_all_in_dir() {
     apply_patch "../patches/wine-hotfixes/pending/0001-server-Dynamically-relocate-.exes-by-default-too.patch"
     apply_patch "../patches/wine-hotfixes/pending/0002-ntdll-allow-disabling-executable-ASLR.patch"
 
-    echo "WINE: -CUSTOM- applying lina's memory leak patch"
-    apply_patch "../patches/wine-hotfixes/pending/lina-fix-v5-proton.patch"
-
 ### END WINE PENDING UPSTREAM SECTION ###
 
 
@@ -681,6 +678,9 @@ apply_all_in_dir() {
     # https://github.com/ValveSoftware/Proton/issues/7486#issuecomment-6594771550
     echo "WINE: -PENDING- ntdll: let a thread killed during its startup exit instead of hanging (Helldivers 2 thread growth)"
     apply_patch "../patches/wine-hotfixes/pending/ntdll-dont-keep-reply-pipe-open-during-thread-init.patch"
+
+    echo "WINE: -CUSTOM- applying lina's memory leak patch"
+    apply_patch "../patches/wine-hotfixes/pending/lina-fix-v5-proton.patch"
 
     echo "WINE: RUN AUTOCONF TOOLS/MAKE_REQUESTS"
     autoreconf -f
